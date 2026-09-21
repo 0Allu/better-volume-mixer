@@ -3,7 +3,7 @@
 A compact volume mixer for Windows 11. Control master volume, individual apps,
 and playback devices directly from the system tray.
 
-![Better Volume Mixer demo](https://raw.githubusercontent.com/0Allu/better-volume-mixer/main/assets/better-volume-mixer-demo.png)
+![Better Volume Mixer demo](https://raw.githubusercontent.com/0Allu/better-volume-mixer/main/assets/volume-mixer-demo.png)
 
 Click the speaker icon in the system tray to open or close the mixer. If it is
 hidden, open the tray overflow menu and drag the icon onto the taskbar.
