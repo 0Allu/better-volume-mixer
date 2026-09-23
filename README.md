@@ -1,5 +1,7 @@
 # Better Volume Mixer
 
+[Official Windhawk mod](https://github.com/ramensoftware/windhawk-mods/blob/main/mods/better-volume-mixer.wh.cpp)
+
 A compact volume mixer for Windows 11. Control master volume, individual apps,
 and playback devices directly from the system tray.
 
