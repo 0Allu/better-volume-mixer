@@ -30,6 +30,7 @@ hidden, open the tray overflow menu and drag the icon onto the taskbar.
 * Full-name tooltips for shortened app and device names
 * Compact mode
 * Light, dark, and system themes
+* Windows 11 and Windows 10 visual styles
 * Background transparency, blur, and animations
 * Configurable apps per page
 
