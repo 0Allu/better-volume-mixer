@@ -1,5 +1,7 @@
 # Better Volume Mixer
 
+![Users](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fmods.windhawk.net%2Fcatalog.json&query=%24.mods%5B'better-volume-mixer'%5D.details.users&label=users&style=for-the-badge)
+
 [Official Windhawk mod repository](https://github.com/ramensoftware/windhawk-mods/blob/main/mods/better-volume-mixer.wh.cpp)
 
 [Official Windhawk mod website](https://windhawk.net/mods/better-volume-mixer)
