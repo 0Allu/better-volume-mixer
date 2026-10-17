@@ -17,8 +17,10 @@ hidden, open the tray overflow menu and drag the icon onto the taskbar.
 * Master and per-app volume controls
 * Quick playback device switching
 * Mute buttons and middle-click mute
-* Muted master-volume indicator in the mixer and tray
+* Muted master-volume indicator in the mixer
+* Tray icon that shows the master volume level
 * Middle-click the tray icon to toggle master mute
+* Scroll over the tray icon to change master volume
 * Mouse-wheel volume adjustment
 * Exact volume entry
 * Keyboard controls
