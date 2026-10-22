@@ -44,6 +44,9 @@ does not mute it.
 
 Most appearance and behavior options can be changed from the mod settings.
 
+Some features might not work while an elevated (administrator) program has the
+focus.
+
 ## Hide the Windows volume icon
 
 To avoid having two volume icons, install
