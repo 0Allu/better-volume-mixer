@@ -6,8 +6,7 @@
 
 [Official Windhawk mod website](https://windhawk.net/mods/better-volume-mixer)
 
-A compact volume mixer for Windows 11. Control master volume, individual apps,
-and playback devices directly from the system tray.
+A compact volume mixer for Windows 11. Change master volume, each app's volume and the playback device from the system tray.
 
 ![Better Volume Mixer demo](https://raw.githubusercontent.com/0Allu/better-volume-mixer/main/assets/better-volume-mixer.png)
 
@@ -18,7 +17,8 @@ hidden, open the tray overflow menu and drag the icon onto the taskbar.
 
 * Master and per-app volume controls
 * Quick playback device switching
-* Mute buttons and middle-click mute
+* Mute buttons and middle-click mute, or click an app's icon to mute it
+* Optional alert sound when you change the volume
 * Muted master-volume indicator in the mixer
 * Tray icon that shows the master volume level
 * Middle-click the tray icon to toggle master mute
