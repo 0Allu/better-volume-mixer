@@ -27,7 +27,8 @@ hidden, open the tray overflow menu and drag the icon onto the taskbar.
 ## Features
 
 * Master and per-app volume controls
-* Quick playback device switching
+* Quick playback device switching, with an option to switch the communication
+  device too
 * Mute buttons and middle-click mute, or click an app's icon to mute it
 * Optional alert sound when you change the volume
 * Muted master-volume indicator in the mixer
@@ -103,6 +104,12 @@ and enable **Hide volume icon** in its settings.
   $options:
   - icon: Volume icon
   - percent: Volume percentage
+- outputSwitchMode: playback
+  $name: Output switching mode
+  $description: What choosing a device in the mixer changes. "All audio" also makes it the Default Communication Device, used by calls and voice chat. Switching this setting back does not restore the previous communication device.
+  $options:
+  - playback: Default device only (keep communication device)
+  - all: All audio (default and communication device)
 - volumeStep: 5
   $name: Mouse-wheel volume step
   $description: Percent per wheel step over a row or the tray icon, from 1 to 20.
@@ -318,6 +325,7 @@ struct Settings {
     bool muteWithIcon = false;
     bool volumeSound = false;
     bool volumeSoundOnWheel = false;
+    bool switchCommunicationsOutput = false;
     std::vector<CustomApp> customApps;
     std::vector<std::wstring> hiddenApps;
 };
@@ -697,6 +705,9 @@ void LoadSettings() {
     g_settings.volumeSound = wcscmp(sound.get(), L"noWheel") == 0 ||
                              wcscmp(sound.get(), L"always") == 0;
     g_settings.volumeSoundOnWheel = wcscmp(sound.get(), L"always") == 0;
+    WindhawkUtils::StringSetting outputMode =
+        WindhawkUtils::StringSetting::make(L"outputSwitchMode");
+    g_settings.switchCommunicationsOutput = wcscmp(outputMode.get(), L"all") == 0;
     g_settings.volumeStep =
         ClampInt(Wh_GetIntSetting(L"volumeStep"), 1, 20);
 
@@ -5372,9 +5383,13 @@ HRESULT SetPlaybackOutput(const std::wstring& id) {
     HRESULT result = CoCreateInstance(kCLSID_PolicyConfigClient, nullptr, CLSCTX_INPROC_SERVER,
                                       kIID_IPolicyConfig, reinterpret_cast<void**>(&policy));
     if (SUCCEEDED(result)) {
-        // Change ordinary playback only. Preserve the communications output.
+        // The communications output is preserved unless the settings ask to
+        // switch all audio.
         result = policy->SetDefaultEndpoint(id.c_str(), eMultimedia);
         if (SUCCEEDED(result)) result = policy->SetDefaultEndpoint(id.c_str(), eConsole);
+        if (SUCCEEDED(result) && g_settings.switchCommunicationsOutput) {
+            result = policy->SetDefaultEndpoint(id.c_str(), eCommunications);
+        }
         policy->Release();
     }
     return result;
