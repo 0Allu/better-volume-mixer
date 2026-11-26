@@ -107,10 +107,10 @@ and enable **Hide volume icon** in its settings.
   - percent: Volume percentage
 - outputSwitchMode: playback
   $name: Output switching mode
-  $description: What choosing a device in the mixer changes. "All audio" also makes it the Default Communication Device, used by calls and voice chat. Switching this setting back does not restore the previous communication device.
+  $description: "All audio" also makes it the communication device, used for calls. Switching back doesn't restore the previous one.
   $options:
-  - playback: Default device only (keep communication device)
-  - all: All audio (default and communication device)
+  - playback: Playback only
+  - all: Playback and communication
 - trayNumberSize: 100
   $name: Tray percentage size
   $description: From 50 to 100 percent of the largest size that fits in the tray.
@@ -5762,6 +5762,7 @@ void ShowOutputPicker(HWND window) {
     KillTimer(window, TIMER_CHECK_FOCUS);
     std::vector<OutputDevice> outputs;
     std::wstring currentId;
+    std::wstring communicationsId;
     IMMDeviceEnumerator* enumerator = nullptr;
     HRESULT result = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr,
         CLSCTX_INPROC_SERVER, __uuidof(IMMDeviceEnumerator),
@@ -5774,6 +5775,18 @@ void ShowOutputPicker(HWND window) {
                 currentId = id; CoTaskMemFree(id);
             }
             current->Release();
+        }
+        if (g_settings.switchCommunicationsOutput) {
+            IMMDevice* communications = nullptr;
+            if (SUCCEEDED(enumerator->GetDefaultAudioEndpoint(eRender, eCommunications,
+                &communications))) {
+                LPWSTR id = nullptr;
+                if (SUCCEEDED(communications->GetId(&id)) && id) {
+                    communicationsId = id;
+                    CoTaskMemFree(id);
+                }
+                communications->Release();
+            }
         }
         IMMDeviceCollection* collection = nullptr;
         result = enumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &collection);
@@ -5809,7 +5822,10 @@ void ShowOutputPicker(HWND window) {
         g_outputMenuOpen = false;
         return;
     }
-    if (selected >= 0 && selected != current) {
+    bool communicationsDiffer = g_settings.switchCommunicationsOutput && selected >= 0 && outputs[selected].id != communicationsId;
+    // The list marks the multimedia output as current. When switching all
+    // audio, choosing it again still moves the communications output to it.
+    if (selected >= 0 && (selected != current || communicationsDiffer)) {
         result = SetPlaybackOutput(outputs[selected].id);
         if (FAILED(result)) {
             Wh_Log(L"Mixer: output switch failed: 0x%08lX", static_cast<unsigned long>(result));
