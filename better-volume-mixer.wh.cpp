@@ -105,15 +105,15 @@ and enable **Hide volume icon** in its settings.
   $options:
   - icon: Volume icon
   - percent: Volume percentage
-- outputSwitchMode: playback
-  $name: Output switching mode
-  $description: "All audio" also makes it the communication device, used for calls. Switching back doesn't restore the previous one.
-  $options:
-  - playback: Playback only
-  - all: Playback and communication
 - trayNumberSize: 100
   $name: Tray percentage size
   $description: From 50 to 100 percent of the largest size that fits in the tray.
+- outputSwitchMode: playback
+  $name: Output switching mode
+  $description: Also make the chosen output the communication device, used for calls. Switching back doesn't restore the previous one.
+  $options:
+  - playback: Playback only
+  - all: Playback and communication
 - volumeStep: 5
   $name: Mouse-wheel volume step
   $description: Percent per wheel step over a row or the tray icon, from 1 to 20.
