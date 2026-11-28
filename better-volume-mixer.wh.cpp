@@ -27,7 +27,8 @@ hidden, open the tray overflow menu and drag the icon onto the taskbar.
 ## Features
 
 * Master and per-app volume controls
-* Quick playback device switching
+* Quick playback device switching, with an option to switch the communication
+  device too
 * Mute buttons and middle-click mute, or click an app's icon to mute it
 * Optional alert sound when you change the volume
 * Muted master-volume indicator in the mixer
@@ -107,6 +108,12 @@ and enable **Hide volume icon** in its settings.
 - trayNumberSize: 100
   $name: Tray percentage size
   $description: From 50 to 100 percent of the largest size that fits in the tray.
+- outputSwitchMode: playback
+  $name: Output switching mode
+  $description: Also make the chosen output the communication device, used for calls. Switching back doesn't restore the previous one.
+  $options:
+  - playback: Playback only
+  - all: Playback and communication
 - volumeStep: 5
   $name: Mouse-wheel volume step
   $description: Percent per wheel step over a row or the tray icon, from 1 to 20.
@@ -323,6 +330,7 @@ struct Settings {
     bool muteWithIcon = false;
     bool volumeSound = false;
     bool volumeSoundOnWheel = false;
+    bool switchCommunicationsOutput = false;
     std::vector<CustomApp> customApps;
     std::vector<std::wstring> hiddenApps;
 };
@@ -703,6 +711,9 @@ void LoadSettings() {
     g_settings.volumeSound = wcscmp(sound.get(), L"noWheel") == 0 ||
                              wcscmp(sound.get(), L"always") == 0;
     g_settings.volumeSoundOnWheel = wcscmp(sound.get(), L"always") == 0;
+    WindhawkUtils::StringSetting outputMode =
+        WindhawkUtils::StringSetting::make(L"outputSwitchMode");
+    g_settings.switchCommunicationsOutput = wcscmp(outputMode.get(), L"all") == 0;
     g_settings.volumeStep =
         ClampInt(Wh_GetIntSetting(L"volumeStep"), 1, 20);
 
@@ -5422,9 +5433,13 @@ HRESULT SetPlaybackOutput(const std::wstring& id) {
     HRESULT result = CoCreateInstance(kCLSID_PolicyConfigClient, nullptr, CLSCTX_INPROC_SERVER,
                                       kIID_IPolicyConfig, reinterpret_cast<void**>(&policy));
     if (SUCCEEDED(result)) {
-        // Change ordinary playback only. Preserve the communications output.
+        // The communications output is preserved unless the settings ask to
+        // switch all audio.
         result = policy->SetDefaultEndpoint(id.c_str(), eMultimedia);
         if (SUCCEEDED(result)) result = policy->SetDefaultEndpoint(id.c_str(), eConsole);
+        if (SUCCEEDED(result) && g_settings.switchCommunicationsOutput) {
+            result = policy->SetDefaultEndpoint(id.c_str(), eCommunications);
+        }
         policy->Release();
     }
     return result;
@@ -5747,6 +5762,7 @@ void ShowOutputPicker(HWND window) {
     KillTimer(window, TIMER_CHECK_FOCUS);
     std::vector<OutputDevice> outputs;
     std::wstring currentId;
+    std::wstring communicationsId;
     IMMDeviceEnumerator* enumerator = nullptr;
     HRESULT result = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr,
         CLSCTX_INPROC_SERVER, __uuidof(IMMDeviceEnumerator),
@@ -5759,6 +5775,18 @@ void ShowOutputPicker(HWND window) {
                 currentId = id; CoTaskMemFree(id);
             }
             current->Release();
+        }
+        if (g_settings.switchCommunicationsOutput) {
+            IMMDevice* communications = nullptr;
+            if (SUCCEEDED(enumerator->GetDefaultAudioEndpoint(eRender, eCommunications,
+                &communications))) {
+                LPWSTR id = nullptr;
+                if (SUCCEEDED(communications->GetId(&id)) && id) {
+                    communicationsId = id;
+                    CoTaskMemFree(id);
+                }
+                communications->Release();
+            }
         }
         IMMDeviceCollection* collection = nullptr;
         result = enumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &collection);
@@ -5794,7 +5822,10 @@ void ShowOutputPicker(HWND window) {
         g_outputMenuOpen = false;
         return;
     }
-    if (selected >= 0 && selected != current) {
+    bool communicationsDiffer = g_settings.switchCommunicationsOutput && selected >= 0 && outputs[selected].id != communicationsId;
+    // The list marks the multimedia output as current. When switching all
+    // audio, choosing it again still moves the communications output to it.
+    if (selected >= 0 && (selected != current || communicationsDiffer)) {
         result = SetPlaybackOutput(outputs[selected].id);
         if (FAILED(result)) {
             Wh_Log(L"Mixer: output switch failed: 0x%08lX", static_cast<unsigned long>(result));
